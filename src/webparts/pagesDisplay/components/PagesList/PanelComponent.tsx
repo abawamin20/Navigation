@@ -106,16 +106,22 @@ export const FilterPanelComponent = ({
    * @returns An array of FilterOptions for the categories.
    */
   const constructCategoryFilters = (
-    categories: (null | string | ConstructedFilter)[]
+    categories: (number | string | ConstructedFilter)[]
   ) => {
     // Map categories to FilterOptions
     const updatedFilterCategories: FilterOptions[] = categories.map(
-      (category: string | ConstructedFilter) => {
+      (category: string | number | ConstructedFilter) => {
         if (typeof category === "string") {
           return {
             key: category,
             text: category,
             value: category,
+          };
+        } else if (typeof category === "number") {
+          return {
+            key: category.toString(), // Convert number to string
+            text: category.toString(),
+            value: category.toString(), // Ensure value is a string
           };
         } else {
           return {
@@ -126,7 +132,6 @@ export const FilterPanelComponent = ({
         }
       }
     );
-
     // Set the options state with the updated filter categories
     setOptions(updatedFilterCategories);
 
@@ -145,7 +150,7 @@ export const FilterPanelComponent = ({
     // Fetch distinct values for the columnName from the pagesService
     pagesService
       .getDistinctValues(columnName, columnType, data)
-      .then((res: (string | ConstructedFilter)[]) => {
+      .then((res: (string | number | ConstructedFilter)[]) => {
         // Construct category filters using the result and update the options state
 
         constructCategoryFilters(res);

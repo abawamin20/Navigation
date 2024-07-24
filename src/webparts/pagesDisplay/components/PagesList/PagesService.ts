@@ -53,7 +53,6 @@ class PagesService {
     columnType: string,
     values: any
   ): Promise<(string | ConstructedFilter)[]> => {
-    console.log(columnName, columnType, values);
     try {
       const items = values; // The list of items to fetch distinct values from.
 
@@ -104,7 +103,7 @@ class PagesService {
             break;
           case "Number":
             const uniqueNumberValue = item[columnName]; // The value of the column for the current item.
-            console.log(uniqueNumberValue);
+
             if (!seenValues.has(uniqueNumberValue)) {
               seenValues.add(uniqueNumberValue);
               distinctValues.push(uniqueNumberValue);
@@ -125,6 +124,15 @@ class PagesService {
               if (!seenValues.has(uniqueUrlChoiceValue.Url)) {
                 seenValues.add(uniqueUrlChoiceValue.Url);
                 distinctValues.push(uniqueUrlChoiceValue.Url);
+              }
+            }
+            break;
+          case "Computed":
+            const uniqueCompChoiceValue = item[columnName]; // The value of the column for the current item.
+            if (uniqueCompChoiceValue) {
+              if (!seenValues.has(uniqueCompChoiceValue.split(".")[0])) {
+                seenValues.add(uniqueCompChoiceValue.split(".")[0]);
+                distinctValues.push(uniqueCompChoiceValue.split(".")[0]);
               }
             }
             break;
@@ -175,8 +183,6 @@ class PagesService {
       const list = this._sp.web.lists.getByTitle("Site Pages");
 
       // Default columns to always include
-
-      console.log(columnInfos);
       const allFieldsSet = new Set<string>();
       const expandFieldsSet = new Set<string>();
 
@@ -196,7 +202,7 @@ class PagesService {
         }
       });
 
-      const allFields: string[] = [];
+      const allFields: string[] = ["FileRef", "FileDirRef", "FSObjType"];
       allFieldsSet.forEach((col) => allFields.push(col));
 
       const expandFields: string[] = [];
@@ -239,10 +245,7 @@ class PagesService {
 
             case "User":
               const userFilters = filter.values
-                .map(
-                  (value) =>
-                    `${filter.filterColumn}/Id eq '${value}' or Editor/Id eq '${value}'`
-                )
+                .map((value) => `${filter.filterColumn}/Id eq '${value}'`)
                 .join(" or ");
               if (userFilters && userFilters != "")
                 filterQuery += ` and (${userFilters})`;
@@ -250,11 +253,30 @@ class PagesService {
             case "URL":
               const urlFilters = filter.values
                 .map((value) => {
-                  `${filter.filterColumn}/Url eq '${value}'`;
+                  return `${filter.filterColumn}/Url eq '${value}'`;
                 })
                 .join(" or ");
               if (urlFilters && urlFilters != "")
                 filterQuery += ` and (${urlFilters})`;
+              break;
+
+            case "Computed":
+              if (
+                filter.filterColumn === "Name" ||
+                filter.filterColumn === "FileLeafRef" ||
+                filter.filterColumn === "LinkFilename" ||
+                filter.filterColumn === "LinkFilenameNoMenu"
+              ) {
+                const urlFilters = filter.values
+                  .map((value) => {
+                    return `Title eq '${value}'`;
+                  })
+                  .join(" or ");
+                if (urlFilters && urlFilters != "")
+                  filterQuery += ` and (${urlFilters})`;
+              }
+              break;
+
             default:
               const columnFilters = filter.values
                 .map((value) => `${filter.filterColumn} eq '${value}'`)
@@ -265,7 +287,7 @@ class PagesService {
           }
         }
       });
-      console.log(allFields, expandFields);
+
       const pages: any[] = await list.items
         .filter(filterQuery)
         .select(...allFields)

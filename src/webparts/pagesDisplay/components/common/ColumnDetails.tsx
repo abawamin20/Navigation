@@ -12,17 +12,6 @@ const CellRender = (props: {
 
   switch (columnType) {
     case "Text":
-      if (columnName === "Title") {
-        return (
-          <a
-            href={item.FileRef}
-            target="_blank"
-            title={`${window.origin}${item.FileRef}`}
-          >
-            {item.Title}
-          </a>
-        );
-      }
       return <div>{item[columnName]}</div>;
     case "DateTime":
       const date = new Date(item[columnName]);
@@ -71,17 +60,96 @@ const CellRender = (props: {
         )
       );
     case "Computed":
-      return (
-        item[columnName] && (
+      if (
+        columnName === "Name" ||
+        columnName === "FileLeafRef" ||
+        columnName === "LinkFilename" ||
+        columnName === "LinkFilenameNoMenu"
+      ) {
+        return (
           <a
-            href={`${context.pageContext.web.absoluteUrl}/SitePages/${item[columnName]}`}
             target="_blank"
-            title={`${context.pageContext.web.absoluteUrl}/SitePages/${item[columnName]}`}
+            title={`${window.origin}${item.FileRef}`}
+            style={{
+              textDecoration: "underline",
+              color: "blue",
+              cursor: "pointer",
+            }}
+            onClick={(e) => {
+              window.open(`${window.origin}${item.FileRef}`, "_blank");
+            }}
           >
             {item[columnName]}
           </a>
-        )
-      );
+        );
+      } else {
+        return (
+          item[columnName] && (
+            <a
+              style={{
+                textDecoration: "underline",
+                color: "blue",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                window.open(
+                  `${context.pageContext.web.absoluteUrl}/SitePages/${item[columnName]}`,
+                  "_blank"
+                );
+              }}
+              target="_blank"
+              title={`${context.pageContext.web.absoluteUrl}/SitePages/${item[columnName]}`}
+            >
+              {item[columnName]}
+            </a>
+          )
+        );
+      }
+    case "File":
+      if (
+        columnName === "FileLeafRef" ||
+        columnName === "LinkFilename" ||
+        columnName === "LinkFilenameNoMenu"
+      ) {
+        return (
+          <a
+            target="_blank"
+            title={`${window.origin}${item.FileRef}`}
+            style={{
+              textDecoration: "underline",
+              color: "blue",
+              cursor: "pointer",
+            }}
+            onClick={(e) => {
+              window.open(`${window.origin}${item.FileRef}`, "_blank");
+            }}
+          >
+            {item[columnName]}
+          </a>
+        );
+      } else {
+        return (
+          item[columnName] && (
+            <a
+              target="_blank"
+              title={`${context.pageContext.web.absoluteUrl}/SitePages/${item[columnName]}`}
+              style={{
+                textDecoration: "underline",
+                color: "blue",
+                cursor: "pointer",
+              }}
+              onClick={(e) => {
+                window.open(
+                  `${context.pageContext.web.absoluteUrl}/SitePages/${item[columnName]}`,
+                  "_blank"
+                );
+              }}
+            >
+              {item[columnName]}
+            </a>
+          )
+        );
+      }
     default:
       return <div>{item[columnName]}</div>;
   }
